@@ -1,0 +1,42 @@
+services:
+  database:
+    image: 'mysql:latest'
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - '3306'
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: database
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "8080:80"
+    depends_on:
+      - database
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: symfony_app
+    container_name: app
+    restart: always
+    ports:
+      - "8000:80"
+    depends_on:
+      - database
+      - mailer
+    volumes:
+      - .:/var/www/html
+
+  mailer:
+    image: schickling/mailcatcher
+    ports: ["1025", "1080"]
+
+
+volumes:
+  mysql-data:
