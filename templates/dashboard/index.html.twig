@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+    <h1>You are logged in!</h1>
+    <p>Welcome, {{ user.email }}!</p>
+    <a href="{{ path('app_logout') }}">Log out</a>
+
+    {{ dump(user) }}
+</body>
+</html>
