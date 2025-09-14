@@ -21,6 +21,7 @@ security:
             custom_authenticators:
                 - App\Security\LoginFormAuthenticator
                 - App\Security\GoogleOAuthAuthenticator
+                - App\Security\FacebookOAuthAuthenticator
 
             entry_point: App\Security\LoginFormAuthenticator
 
@@ -32,4 +33,5 @@ security:
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/register, roles: PUBLIC_ACCESS }
         - { path: ^/auth/google, roles: PUBLIC_ACCESS }
+        - { path: ^/auth/facebook, roles: PUBLIC_ACCESS }
         - { path: ^/, roles: ROLE_USER }

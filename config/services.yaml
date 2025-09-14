@@ -7,6 +7,9 @@ parameters:
     google.client_id: '%env(GOOGLE_CLIENT_ID)%'
     google.client_secret: '%env(GOOGLE_CLIENT_SECRET)%'
     google.redirect_uri: '%env(GOOGLE_REDIRECT_URI)%'
+    facebook.app_id: '%env(FACEBOOK_APP_ID)%'
+    facebook.app_secret: '%env(FACEBOOK_APP_SECRET)%'
+    facebook.redirect_uri: '%env(FACEBOOK_REDIRECT_URI)%'
 
 services:
     # default configuration for services in *this* file
@@ -31,6 +34,14 @@ services:
             $clientId: '%google.client_id%'
             $clientSecret: '%google.client_secret%'
             $redirectUri: '%google.redirect_uri%'
+    
+    App\Service\FacebookOAuthService:
+        arguments:
+            $appId: '%facebook.app_id%'
+            $appSecret: '%facebook.app_secret%'
+            $redirectUri: '%facebook.redirect_uri%'
+            $requestStack: '@request_stack'
+
 
     App\Service\SocialUserService:
         arguments:
