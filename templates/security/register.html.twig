@@ -4,11 +4,11 @@
 <h1>Create account</h1>
 
 {{ form_start(registrationForm) }}
-  {{ form_row(registrationForm.email) }}
-  {{ form_row(registrationForm.plainPassword) }}
-  <button class="btn btn-primary">Register</button>
-  <a href="{{ path('google_auth_redirect') }}">Continue with Google</a>
-  <a href="{{ path('facebook_auth_redirect') }}">Continue with Facebook</a>
+  {{ form_row(registrationForm.email, { 'attr': {'class': 'form-control mb-3'}}) }}
+  {{ form_row(registrationForm.plainPassword, { 'attr': {'class': 'form-control mb-3'}}) }}
+  <button class="btn btn-sm btn-dark">Register</button>
+  <a href="{{ path('google_auth_redirect') }}" class="btn btn-sm btn-danger"><i class="fa-brands fa-google"></i> Continue with Google</a>
+  <a href="{{ path('facebook_auth_redirect') }}" class="btn btn-sm btn-primary"><i class="fa-brands fa-facebook-f"></i> Continue with Facebook</a>
 
 {{ form_end(registrationForm) }}
 {% endblock %}

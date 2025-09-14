@@ -1,13 +1,11 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Dashboard</title>
-</head>
-<body>
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block body %}
     <h1>You are logged in!</h1>
     <p>Welcome, {{ user.email }}!</p>
-    <a href="{{ path('app_logout') }}">Log out</a>
+    <a href="{{ path('app_logout') }}" class="btn btn-sm btn-danger">Log out</a>
 
     {{ dump(user) }}
-</body>
-</html>
+{% endblock %}
