@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\DTO\GoogleUserData;
+use App\DTO\FacebookUserData;
 use App\Entity\User;
 use App\Entity\UserIdentity;
 use App\Enum\AuthProvider;
@@ -108,6 +109,99 @@ final class SocialUserService
             'name' => $googleUser->name,
             'picture' => $googleUser->picture,
             'verified_email' => $googleUser->verifiedEmail
+        ]);
+
+        $this->entityManager->flush();
+    }
+
+
+
+
+
+    public function findOrCreateFacebookUser(FacebookUserData $facebookUser): User
+    {
+        $identity = $this->entityManager->getRepository(UserIdentity::class)->findOneBy([
+            'provider' => AuthProvider::FACEBOOK,
+            'providerUserId' => $facebookUser->id
+        ]);
+
+        if ($identity) {
+            $user = $identity->getUser();
+            $this->updateFacebookUser($user, $identity, $facebookUser);
+            return $user;
+        }
+
+        $existingUser = null;
+        if ($facebookUser->email) {
+            $existingUser = $this->userRepository->findOneBy(['email' => $facebookUser->email]);
+        }
+
+        if ($existingUser) {
+            if ($existingUser->getPrimaryProvider() === AuthProvider::LOCAL) {
+                throw new \RuntimeException(
+                    'An account with this email already exists. Please log in with your password first.'
+                );
+            }
+            
+            throw new \RuntimeException(
+                'This email is already associated with a different social login provider.'
+            );
+        }
+
+        return $this->createFacebookUser($facebookUser);
+    }
+
+    private function createFacebookUser(FacebookUserData $facebookUser): User
+    {
+        $user = new User();
+        $user->setEmail($facebookUser->email);
+        $user->setDisplayName($facebookUser->name);
+        $user->setAvatarUrl($facebookUser->picture);
+        $user->setPrimaryProvider(AuthProvider::FACEBOOK);
+        $user->setIsVerified(true);
+        $user->setRoles(['ROLE_USER']);
+        $user->setLastLoginAt(new \DateTimeImmutable());
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+
+        $identity = new UserIdentity();
+        $identity->setProvider(AuthProvider::FACEBOOK);
+        $identity->setProviderUserId($facebookUser->id);
+        $identity->setProviderEmail($facebookUser->email);
+        $identity->setAccessToken($facebookUser->accessToken);
+        $identity->setLastUsedAt(new \DateTimeImmutable());
+        $identity->setProfile([
+            'name' => $facebookUser->name,
+            'picture' => $facebookUser->picture,
+        ]);
+        $identity->setUser($user);
+        $this->entityManager->persist($identity);
+        $this->entityManager->flush();
+
+        $user->setIdentity($identity);
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+
+        return $user;
+    }
+
+    private function updateFacebookUser(User $user, UserIdentity $identity, FacebookUserData $facebookUser): void
+    {
+        $user->setLastLoginAt(new \DateTimeImmutable());
+        
+        if ($user->getDisplayName() !== $facebookUser->name) {
+            $user->setDisplayName($facebookUser->name);
+        }
+        
+        if ($user->getAvatarUrl() !== $facebookUser->picture) {
+            $user->setAvatarUrl($facebookUser->picture);
+        }
+
+        $identity->setAccessToken($facebookUser->accessToken);
+        $identity->setLastUsedAt(new \DateTimeImmutable());
+        $identity->setProfile([
+            'name' => $facebookUser->name,
+            'picture' => $facebookUser->picture,
         ]);
 
         $this->entityManager->flush();

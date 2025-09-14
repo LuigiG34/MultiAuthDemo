@@ -35,7 +35,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'string', length: 150, nullable: true)]
     private ?string $displayName = null;
 
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[ORM\Column(type: 'text', nullable: true)]
     private ?string $avatarUrl = null;
 
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
