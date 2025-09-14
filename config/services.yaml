@@ -4,6 +4,9 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    google.client_id: '%env(GOOGLE_CLIENT_ID)%'
+    google.client_secret: '%env(GOOGLE_CLIENT_SECRET)%'
+    google.redirect_uri: '%env(GOOGLE_REDIRECT_URI)%'
 
 services:
     # default configuration for services in *this* file
@@ -22,3 +25,14 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    App\Service\GoogleOAuthService:
+        arguments:
+            $clientId: '%google.client_id%'
+            $clientSecret: '%google.client_secret%'
+            $redirectUri: '%google.redirect_uri%'
+
+    App\Service\SocialUserService:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $userRepository: '@App\Repository\UserRepository'

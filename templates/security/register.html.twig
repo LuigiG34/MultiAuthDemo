@@ -7,5 +7,7 @@
   {{ form_row(registrationForm.email) }}
   {{ form_row(registrationForm.plainPassword) }}
   <button class="btn btn-primary">Register</button>
+  <a href="{{ path('google_auth_redirect') }}">Continue with Google</a>
+
 {{ form_end(registrationForm) }}
 {% endblock %}

@@ -10,7 +10,12 @@ use Symfony\Component\Routing\Annotation\Route;
 final class DefaultController extends AbstractController
 {
     #[Route('', name: 'dashboard', methods: ['GET'])]
-    public function index(): Response {
-        dd($this->getUser());
+    public function index(): Response 
+    {
+        $user = $this->getUser();
+        
+        return $this->render('dashboard/index.html.twig', [
+            'user' => $user,
+        ]);
     }
 }

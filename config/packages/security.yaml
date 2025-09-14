@@ -1,33 +1,35 @@
 security:
-  password_hashers:
-    App\Entity\User:
-      algorithm: auto
+    password_hashers:
+        App\Entity\User:
+            algorithm: auto
 
-  providers:
-    app_user_provider:
-      entity:
-        class: App\Entity\User
-        property: email
+    providers:
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: email
 
-  firewalls:
-    dev:
-      pattern: ^/(?:_(profiler|wdt)|_error)
-      security: false
+    firewalls:
+        dev:
+            pattern: ^/(?:_(profiler|wdt)|_error)
+            security: false
 
-    main:
-      lazy: true
-      provider: app_user_provider
+        main:
+            lazy: true
+            provider: app_user_provider
 
-      custom_authenticators:
-        - App\Security\LoginFormAuthenticator
+            custom_authenticators:
+                - App\Security\LoginFormAuthenticator
+                - App\Security\GoogleOAuthAuthenticator
 
-      entry_point: App\Security\LoginFormAuthenticator
+            entry_point: App\Security\LoginFormAuthenticator
 
-      logout:
-        path: app_logout
-        target: app_login
+            logout:
+                path: app_logout
+                target: app_login
 
-  access_control:
-    - { path: ^/login, roles: PUBLIC_ACCESS }
-    - { path: ^/register, roles: PUBLIC_ACCESS }
-    - { path: ^/, roles: ROLE_USER }
+    access_control:
+        - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/register, roles: PUBLIC_ACCESS }
+        - { path: ^/auth/google, roles: PUBLIC_ACCESS }
+        - { path: ^/, roles: ROLE_USER }
