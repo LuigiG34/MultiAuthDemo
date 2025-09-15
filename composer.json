@@ -27,6 +27,7 @@
         "twig/twig": "^3.21"
     },
     "require-dev": {
+        "dg/bypass-finals": "1.6",
         "phpunit/phpunit": "^9.5",
         "symfony/browser-kit": "6.4.*",
         "symfony/css-selector": "6.4.*",
