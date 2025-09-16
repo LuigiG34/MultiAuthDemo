@@ -18,6 +18,12 @@ use Symfony\Component\Security\Core\Exception\AuthenticationException;
 
 final class FacebookOAuthAuthenticatorTest extends TestCase
 {
+    /**
+     * Build a Request with given route/query params and attach an in-memory session.
+     * @param array $q
+     * @param string $route
+     * @return Request
+     */
     private function mkReq(array $q, string $route='facebook_auth_callback'): Request
     {
         $r = new Request($q, [], ['_route' => $route]);
@@ -25,6 +31,10 @@ final class FacebookOAuthAuthenticatorTest extends TestCase
         return $r;
     }
 
+    /**
+     * Verifies the authenticator declares support only on the callback route with code or error.
+     * @return void
+     */
     public function testSupports(): void
     {
         $auth = new FacebookOAuthAuthenticator(
@@ -38,6 +48,10 @@ final class FacebookOAuthAuthenticatorTest extends TestCase
         $this->assertFalse($auth->supports($this->mkReq([], 'other')));
     }
 
+    /**
+     * Mocks FB + Social services, simulates a valid code, asserts a Passport is created.
+     * @return void
+     */
     public function testAuthenticateSuccess(): void
     {
         $fb = $this->createMock(FacebookOAuthService::class);
@@ -59,6 +73,10 @@ final class FacebookOAuthAuthenticatorTest extends TestCase
         $this->assertNotNull($passport);
     }
 
+    /**
+     * Ensures authenticate() throws when the callback has an error param.
+     * @return void
+     */
     public function testAuthenticateErrorParamThrows(): void
     {
         $auth = new FacebookOAuthAuthenticator(
@@ -71,6 +89,10 @@ final class FacebookOAuthAuthenticatorTest extends TestCase
         $auth->authenticate($this->mkReq(['error'=>'denied']));
     }
 
+    /**
+     * Checks failure adds a flash error and redirects to the login page.
+     * @return void
+     */
     public function testOnFailureRedirectsLoginAndFlashes(): void
     {
         $urls = $this->createMock(UrlGeneratorInterface::class);

@@ -18,6 +18,12 @@ use Symfony\Component\Security\Core\Exception\AuthenticationException;
 
 final class GoogleOAuthAuthenticatorTest extends TestCase
 {
+    /**
+     * Build a Request for the Google callback route with session.
+     * @param array $q
+     * @param string $route
+     * @return Request
+     */
     private function mkReq(array $q, string $route='google_auth_callback'): Request
     {
         $r = new Request($q, [], ['_route' => $route]);
@@ -25,6 +31,10 @@ final class GoogleOAuthAuthenticatorTest extends TestCase
         return $r;
     }
 
+    /**
+     * Verifies support only when route is the callback and code is present.
+     * @return void
+     */
     public function testSupports(): void
     {
         $auth = new GoogleOAuthAuthenticator(
@@ -38,6 +48,10 @@ final class GoogleOAuthAuthenticatorTest extends TestCase
         $this->assertFalse($auth->supports($this->mkReq([], 'google_auth_callback')));
     }
 
+    /**
+     * Confirms authenticate() throws if Google returned an error.
+     * @return void
+     */
     public function testAuthenticateFailsWhenErrorParam(): void
     {
         $auth = new GoogleOAuthAuthenticator(
@@ -50,6 +64,10 @@ final class GoogleOAuthAuthenticatorTest extends TestCase
         $auth->authenticate($this->mkReq(['error' => 'access_denied']));
     }
 
+    /**
+     * Simulates a successful Google exchange and asserts a Passport is issued.
+     * @return void
+     */
     public function testAuthenticateSuccess(): void
     {
         $google = $this->createMock(GoogleOAuthService::class);
@@ -71,6 +89,10 @@ final class GoogleOAuthAuthenticatorTest extends TestCase
         $this->assertNotNull($passport);
     }
 
+    /**
+     * Confirms success redirects to the dashboard.
+     * @return void
+     */
     public function testOnSuccessRedirectsToDashboard(): void
     {
         $urls = $this->createMock(UrlGeneratorInterface::class);
@@ -87,6 +109,10 @@ final class GoogleOAuthAuthenticatorTest extends TestCase
         $this->assertSame('/dashboard', $resp->getTargetUrl());
     }
 
+    /**
+     * Confirms failure sets flash error and redirects to login.
+     * @return void
+     */
     public function testOnFailureRedirectsToLoginAndAddsFlash(): void
     {
         $urls = $this->createMock(UrlGeneratorInterface::class);
