@@ -15,6 +15,11 @@ use PHPUnit\Framework\TestCase;
 
 final class SocialUserServiceTest extends TestCase
 {
+    /**
+     * Creates a mock EntityManager with a repo that returns a provided UserIdentity; persist/flush are no-ops.
+     * @param mixed $found
+     * @return EntityManagerInterface|\PHPUnit\Framework\MockObject\MockObject
+     */
     private function emWithIdentityRepo(?UserIdentity $found): EntityManagerInterface
     {
         $identityRepo = new class($found) {
@@ -33,6 +38,10 @@ final class SocialUserServiceTest extends TestCase
         return $em;
     }
 
+    /**
+     * Existing identity path updates tokens/profile and returns the linked user.
+     * @return void
+     */
     public function testFindOrCreateGoogleUserReturnsExistingAndUpdates(): void
     {
         // Existing identity path
@@ -69,6 +78,10 @@ final class SocialUserServiceTest extends TestCase
         $this->assertInstanceOf(DateTimeImmutable::class, $identity->getLastUsedAt());
     }
 
+    /**
+     * Email conflict with LOCAL user throws with guidance message.
+     * @return void
+     */
     public function testFindOrCreateGoogleUserConflictsWithLocalThrows(): void
     {
         $em = $this->emWithIdentityRepo(null);
@@ -87,6 +100,10 @@ final class SocialUserServiceTest extends TestCase
         $svc->findOrCreateGoogleUser($dto);
     }
 
+    /**
+     * Email already tied to another social provider throws.
+     * @return void
+     */
     public function testFindOrCreateGoogleUserConflictsWithOtherSocialThrows(): void
     {
         $em = $this->emWithIdentityRepo(null);
@@ -105,6 +122,10 @@ final class SocialUserServiceTest extends TestCase
         $svc->findOrCreateGoogleUser($dto);
     }
 
+    /**
+     * No conflicts -> creates user + identity and wires them.
+     * @return void
+     */
     public function testFindOrCreateGoogleUserCreatesNew(): void
     {
         $em = $this->emWithIdentityRepo(null);
@@ -122,6 +143,10 @@ final class SocialUserServiceTest extends TestCase
         $this->assertSame('gid', $created->getIdentity()->getProviderUserId());
     }
 
+    /**
+     * Same creation flow for Facebook; asserts verified + tokens wired.
+     * @return void
+     */
     public function testFindOrCreateFacebookUserMirrorsGoogleLogic(): void
     {
         // New user creation path via Facebook

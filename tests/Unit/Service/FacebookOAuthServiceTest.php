@@ -11,7 +11,12 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 
 final class FacebookOAuthServiceTest extends TestCase
 {
-    private function mkResponse(array $payload): ResponseInterface
+    /**
+     * Tiny Response stub returning a fixed JSON payload to toArray().
+     * @param array $payload
+     * @return object
+     */
+    private function response(array $payload): ResponseInterface
     {
         return new class($payload) implements ResponseInterface {
             public function __construct(private array $payload) {}
@@ -24,6 +29,10 @@ final class FacebookOAuthServiceTest extends TestCase
         };
     }
 
+    /**
+     * Asserts generated FB OAuth URL has required params.
+     * @return void
+     */
     public function testGetAuthorizationUrlContainsExpectedParams(): void
     {
         $http = $this->createMock(HttpClientInterface::class);
@@ -40,29 +49,32 @@ final class FacebookOAuthServiceTest extends TestCase
         $this->assertMatchesRegularExpression('/^[a-f0-9]{32}$/', $q['state']);
     }
 
+    /**
+     * Mocks token+/me requests; asserts DTO fields map correctly.
+     * @return void
+     */
     public function testGetUserFromCodeSuccess(): void
     {
         $http = $this->createMock(HttpClientInterface::class);
 
-        $http->expects($this->at(0))
-            ->method('request')
-            ->with('GET', 'https://graph.facebook.com/v23.0/oauth/access_token', $this->callback(function ($opt) {
-                return ($opt['query']['code'] ?? null) === 'THE_CODE';
-            }))
-            ->willReturn($this->mkResponse(['access_token' => 'AT']));
+        $http->method('request')->willReturnCallback(function (string $method, string $url, array $opts) {
+            if (str_contains($url, '/oauth/access_token')) {
+                return $this->response(['access_token' => 'AT']);
+            }
+            if (str_contains($url, '/me')) {
+                $q = $opts['query'] ?? [];
+                $this->assertSame('AT', $q['access_token'] ?? null);
+                $this->assertSame('id,name,email,picture.type(large)', $q['fields'] ?? null);
 
-        $http->expects($this->at(1))
-            ->method('request')
-            ->with('GET', 'https://graph.facebook.com/v23.0/me', $this->callback(function ($opt) {
-                return ($opt['query']['access_token'] ?? null) === 'AT'
-                    && ($opt['query']['fields'] ?? null) === 'id,name,email,picture.type(large)';
-            }))
-            ->willReturn($this->mkResponse([
-                'id' => '123',
-                'name' => 'Luigi',
-                'email' => 'luigi@example.com',
-                'picture' => ['data' => ['url' => 'https://img.example/pic.jpg']],
-            ]));
+                return $this->response([
+                    'id' => '123',
+                    'name' => 'Luigi',
+                    'email' => 'luigi@example.com',
+                    'picture' => ['data' => ['url' => 'https://img.example/pic.jpg']],
+                ]);
+            }
+            $this->fail('Unexpected URL ' . $url);
+        });
 
         $svc = new FacebookOAuthService('APP_ID', 'SECRET', 'https://example.com/cb', new RequestStack(), $http);
         $dto = $svc->getUserFromCode('THE_CODE');
@@ -75,13 +87,14 @@ final class FacebookOAuthServiceTest extends TestCase
         $this->assertSame('AT', $dto->accessToken);
     }
 
+    /**
+     * Ensures token error raises RuntimeException.
+     * @return void
+     */
     public function testGetUserFromCodeTokenErrorThrows(): void
     {
         $http = $this->createMock(HttpClientInterface::class);
-
-        $http->method('request')->willReturn(
-            $this->mkResponse(['error' => ['message' => 'Invalid code']])
-        );
+        $http->method('request')->willReturn($this->response(['error' => ['message' => 'Invalid code']]));
 
         $svc = new FacebookOAuthService('APP_ID', 'SECRET', 'https://example.com/cb', new RequestStack(), $http);
 
@@ -90,10 +103,14 @@ final class FacebookOAuthServiceTest extends TestCase
         $svc->getUserFromCode('BAD');
     }
 
+    /**
+     * Ensures missing access token raises RuntimeException.
+     * @return void
+     */
     public function testGetUserFromCodeNoAccessTokenThrows(): void
     {
         $http = $this->createMock(HttpClientInterface::class);
-        $http->method('request')->willReturn($this->mkResponse([]));
+        $http->method('request')->willReturn($this->response([]));
 
         $svc = new FacebookOAuthService('APP_ID', 'SECRET', 'https://example.com/cb', new RequestStack(), $http);
 
